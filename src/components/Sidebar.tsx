@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare } from "lucide-react";
 import { Conversation } from "@/types/chat";
 import { cn } from "@/lib/utils";
+import Image from 'next/image';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -20,10 +21,15 @@ export const Sidebar = ({
 }: SidebarProps) => {
   return (
     <div className="flex flex-col w-80 h-screen bg-zinc-900 border-r border-zinc-800">
-      <div className="p-4">
+      <div className="p-4 flex items-center space-x-4">
+        <img 
+          src="/lovable-uploads/afb1c28f-002f-4cb3-995c-375bd60bd993.png" 
+          alt="Khoa Viễn Thông Logo" 
+          className="h-12 w-12 object-contain"
+        />
         <Button
           onClick={onNewChat}
-          className="w-full bg-zinc-800 hover:bg-zinc-700"
+          className="flex-1 bg-zinc-800 hover:bg-zinc-700"
         >
           <MessageSquare className="mr-2 h-4 w-4" />
           Cuộc trò chuyện mới
@@ -56,3 +62,4 @@ export const Sidebar = ({
     </div>
   );
 };
+
