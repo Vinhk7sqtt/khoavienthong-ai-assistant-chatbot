@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -36,16 +35,21 @@ const Index = () => {
     saveConversations([newConversation, ...conversations]);
   };
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, file?: File) => {
     if (!currentConversationId) {
       createNewChat();
     }
 
     const newMessage: Message = {
       id: crypto.randomUUID(),
-      content,
+      content: file ? `${content} [File: ${file.name}]` : content,
       role: "user",
       timestamp: Date.now(),
+      attachment: file ? {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      } : undefined
     };
 
     const updatedConversations = conversations.map((conv) => {
@@ -63,16 +67,17 @@ const Index = () => {
     setConversations(updatedConversations);
     saveConversations(updatedConversations);
 
-    // Call n8n API
     setIsLoading(true);
     try {
-      // Replace with your n8n API endpoint
+      const formData = new FormData();
+      formData.append('message', content);
+      if (file) {
+        formData.append('file', file);
+      }
+
       const response = await fetch("YOUR_N8N_ENDPOINT", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: content }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -98,7 +103,6 @@ const Index = () => {
       saveConversations(finalConversations);
     } catch (error) {
       console.error("Error calling n8n:", error);
-      // Handle error appropriately
     } finally {
       setIsLoading(false);
     }
