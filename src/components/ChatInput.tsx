@@ -73,14 +73,14 @@ export const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-zinc-800">
-      <div className="flex gap-2 max-w-3xl mx-auto items-center">
+    <form onSubmit={handleSubmit} className="p-4">
+      <div className="flex gap-2 items-center">
         <Button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           variant="ghost"
           size="icon"
-          className="text-zinc-400 hover:text-white"
+          className="text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10"
         >
           <Paperclip className="h-4 w-4" />
         </Button>
@@ -96,7 +96,9 @@ export const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
           onClick={toggleVoiceRecording}
           variant="ghost"
           size="icon"
-          className={`${isRecording ? 'text-red-500' : 'text-zinc-400 hover:text-white'}`}
+          className={cn(
+            isRecording ? 'text-red-500' : 'text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10'
+          )}
         >
           {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </Button>
@@ -105,18 +107,18 @@ export const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Nhập câu hỏi của bạn..."
-          className="flex-1 bg-zinc-800 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 bg-zinc-800/50 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 border border-zinc-700"
           disabled={isLoading}
         />
         {selectedFile && (
-          <div className="text-sm text-zinc-400">
+          <div className="text-sm text-purple-400">
             {selectedFile.name}
           </div>
         )}
         <Button
           type="submit"
           disabled={(!input.trim() && !selectedFile) || isLoading}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
         >
           <Send className="h-4 w-4" />
         </Button>

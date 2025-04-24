@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -109,24 +110,34 @@ const Index = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 text-white">
-      <Sidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onNewChat={createNewChat}
-        onSelectConversation={setCurrentConversationId}
-      />
+    <div className="flex min-h-screen bg-zinc-900">
+      <div className="w-72 flex-shrink-0">
+        <Sidebar
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onNewChat={createNewChat}
+          onSelectConversation={setCurrentConversationId}
+        />
+      </div>
       <div className="flex-1 flex flex-col h-screen">
-        <div className="text-center p-8 border-b border-zinc-800">
-          <h1 className="text-2xl font-bold mb-2">KHOA VIỄN THÔNG</h1>
-          <p className="text-zinc-400">Trợ lý AI hỗ trợ học tập</p>
+        <div className="text-center p-8 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-b border-zinc-800">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
+            KHOA VIỄN THÔNG
+          </h1>
+          <p className="text-zinc-300">Trợ lý AI hỗ trợ học tập</p>
         </div>
-        <ScrollArea className="flex-1 p-4">
-          {currentConversation?.messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
+        <ScrollArea className="flex-1 p-6">
+          <div className="max-w-4xl mx-auto">
+            {currentConversation?.messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+          </div>
         </ScrollArea>
-        <ChatInput onSend={sendMessage} isLoading={isLoading} />
+        <div className="border-t border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto">
+            <ChatInput onSend={sendMessage} isLoading={isLoading} />
+          </div>
+        </div>
       </div>
     </div>
   );
