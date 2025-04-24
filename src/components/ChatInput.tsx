@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Send, Mic, MicOff, Paperclip } from "lucide-react";
 import { useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSend: (message: string, file?: File) => void;
