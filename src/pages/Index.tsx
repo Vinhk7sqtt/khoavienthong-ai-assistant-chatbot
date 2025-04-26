@@ -38,8 +38,28 @@ const Index = () => {
   };
 
   const sendMessage = async (content: string, file?: File) => {
-    if (!currentConversationId) {
-      createNewChat();
+    let activeConversationId = currentConversationId;
+
+    if (!activeConversationId) {
+      // Create new chat and wait for state to update
+      const newConversation: Conversation = {
+        id: crypto.randomUUID(),
+        title: "Cuộc trò chuyện mới",
+        messages: [],
+        timestamp: Date.now(),
+      };
+      
+      await new Promise<void>((resolve) => {
+        setConversations((prev) => {
+          const newConversations = [newConversation, ...prev];
+          saveConversations(newConversations);
+          resolve();
+          return newConversations;
+        });
+        setCurrentConversationId(newConversation.id);
+      });
+      
+      activeConversationId = newConversation.id;
     }
 
     console.log("Starting sendMessage function with:", { content, file });
@@ -57,7 +77,7 @@ const Index = () => {
     };
 
     const updatedConversations = conversations.map((conv) => {
-      if (conv.id === currentConversationId) {
+      if (conv.id === activeConversationId) {
         return {
           ...conv,
           messages: [...conv.messages, newMessage],
@@ -80,27 +100,36 @@ const Index = () => {
         formData.append('file', file);
       }
 
-      console.log("Sending POST request to n8n...");
       const response = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
         method: "POST",
-        mode: "no-cors",
+        // mode: "no-cors", // Remove if CORS is handled correctly by the server
         body: formData,
       });
-      console.log("POST response received:", response);
-      
-      toast("Câu hỏi đã được gửi đi", {
-        description: "Vui lòng đợi trong giây lát"
-      });
+
+      if (!response.ok) {
+        // Handle non-2xx responses
+        console.error("API request failed:", response.status, response.statusText);
+        const errorText = await response.text(); // Try to get error details
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      // Assuming the API returns JSON with the assistant's message
+      // Adjust '.output' based on the actual structure of your API response
+      const data = await response.json();
+
+      console.log("POST response data:", data);
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
-        content: "Hệ thống đang xử lý câu hỏi của bạn...",
+        // Access the output property from the first element of the array
+        content: data[0]?.output || "Xin lỗi, tôi không thể xử lý yêu cầu này.",
         role: "assistant",
         timestamp: Date.now(),
       };
 
-      const tempConversations = updatedConversations.map((conv) => {
-        if (conv.id === currentConversationId) {
+      // Add the assistant's message directly to the updated conversations
+      const finalConversations = updatedConversations.map((conv) => {
+        if (conv.id === activeConversationId) {
           return {
             ...conv,
             messages: [...conv.messages, assistantMessage],
@@ -108,82 +137,14 @@ const Index = () => {
         }
         return conv;
       });
-      
-      console.log("Temporary conversations with processing message:", tempConversations);
-      setConversations(tempConversations);
-      saveConversations(tempConversations);
-      
-      console.log("Waiting 3 seconds before GET request...");
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      try {
-        console.log("Sending GET request to n8n...");
-        const getResponse = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
-          method: "GET",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        console.log("GET response status:", getResponse.status, getResponse.statusText);
-        
-        if (getResponse.ok) {
-          const data = await getResponse.json();
-          console.log("GET response data:", data);
-          
-          const finalMessage: Message = {
-            id: crypto.randomUUID(),
-            content: data[0]?.output || "Xin lỗi, tôi không thể xử lý yêu cầu này.",
-            role: "assistant",
-            timestamp: Date.now(),
-          };
-          
-          console.log("Final message to display:", finalMessage);
-          
-          const finalConversations = tempConversations.map((conv) => {
-            if (conv.id === currentConversationId) {
-              const messagesWithoutTemp = conv.messages.filter(m => m.id !== assistantMessage.id);
-              return {
-                ...conv,
-                messages: [...messagesWithoutTemp, finalMessage],
-              };
-            }
-            return conv;
-          });
-          
-          console.log("Final conversations with AI response:", finalConversations);
-          setConversations(finalConversations);
-          saveConversations(finalConversations);
-        } else {
-          console.error("GET request failed with status:", getResponse.status);
-          throw new Error(`GET request failed with status: ${getResponse.status}`);
-        }
-      } catch (error) {
-        console.error("Error getting response:", error);
-        
-        // Add error handling for GET request failure
-        const errorMessage: Message = {
-          id: crypto.randomUUID(),
-          content: "Có lỗi khi nhận phản hồi. Vui lòng thử lại sau.",
-          role: "assistant",
-          timestamp: Date.now(),
-        };
-        
-        const errorConversations = tempConversations.map((conv) => {
-          if (conv.id === currentConversationId) {
-            const messagesWithoutTemp = conv.messages.filter(m => m.id !== assistantMessage.id);
-            return {
-              ...conv,
-              messages: [...messagesWithoutTemp, errorMessage],
-            };
-          }
-          return conv;
-        });
-        
-        setConversations(errorConversations);
-        saveConversations(errorConversations);
-      }
-      
+
+      console.log("Final conversations with AI response:", finalConversations);
+      setConversations(finalConversations);
+      saveConversations(finalConversations);
+
+      toast("Phản hồi đã được nhận", {
+        description: "AI đã trả lời câu hỏi của bạn."
+      });
     } catch (error) {
       console.error("Error in main try/catch block:", error);
       const errorMessage: Message = {
@@ -194,7 +155,7 @@ const Index = () => {
       };
 
       const errorConversations = updatedConversations.map((conv) => {
-        if (conv.id === currentConversationId) {
+        if (conv.id === activeConversationId) {
           return {
             ...conv,
             messages: [...conv.messages, errorMessage],
@@ -230,6 +191,7 @@ const Index = () => {
         </div>
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-4xl mx-auto">
+            {/* Removed console log from here */}
             {currentConversation?.messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
