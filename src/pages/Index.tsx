@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -41,6 +42,8 @@ const Index = () => {
       createNewChat();
     }
 
+    console.log("Starting sendMessage function with:", { content, file });
+
     const newMessage: Message = {
       id: crypto.randomUUID(),
       content: file ? `${content} [File: ${file.name}]` : content,
@@ -65,6 +68,7 @@ const Index = () => {
       return conv;
     });
 
+    console.log("Updated conversations with user message:", updatedConversations);
     setConversations(updatedConversations);
     saveConversations(updatedConversations);
 
@@ -76,11 +80,13 @@ const Index = () => {
         formData.append('file', file);
       }
 
+      console.log("Sending POST request to n8n...");
       const response = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
         method: "POST",
         mode: "no-cors",
         body: formData,
       });
+      console.log("POST response received:", response);
       
       toast("Câu hỏi đã được gửi đi", {
         description: "Vui lòng đợi trong giây lát"
@@ -103,12 +109,15 @@ const Index = () => {
         return conv;
       });
       
+      console.log("Temporary conversations with processing message:", tempConversations);
       setConversations(tempConversations);
       saveConversations(tempConversations);
       
+      console.log("Waiting 3 seconds before GET request...");
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       try {
+        console.log("Sending GET request to n8n...");
         const getResponse = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
           method: "GET",
           headers: {
@@ -116,8 +125,11 @@ const Index = () => {
           },
         });
         
+        console.log("GET response status:", getResponse.status, getResponse.statusText);
+        
         if (getResponse.ok) {
           const data = await getResponse.json();
+          console.log("GET response data:", data);
           
           const finalMessage: Message = {
             id: crypto.randomUUID(),
@@ -125,6 +137,8 @@ const Index = () => {
             role: "assistant",
             timestamp: Date.now(),
           };
+          
+          console.log("Final message to display:", finalMessage);
           
           const finalConversations = tempConversations.map((conv) => {
             if (conv.id === currentConversationId) {
@@ -137,15 +151,41 @@ const Index = () => {
             return conv;
           });
           
+          console.log("Final conversations with AI response:", finalConversations);
           setConversations(finalConversations);
           saveConversations(finalConversations);
+        } else {
+          console.error("GET request failed with status:", getResponse.status);
+          throw new Error(`GET request failed with status: ${getResponse.status}`);
         }
       } catch (error) {
         console.error("Error getting response:", error);
+        
+        // Add error handling for GET request failure
+        const errorMessage: Message = {
+          id: crypto.randomUUID(),
+          content: "Có lỗi khi nhận phản hồi. Vui lòng thử lại sau.",
+          role: "assistant",
+          timestamp: Date.now(),
+        };
+        
+        const errorConversations = tempConversations.map((conv) => {
+          if (conv.id === currentConversationId) {
+            const messagesWithoutTemp = conv.messages.filter(m => m.id !== assistantMessage.id);
+            return {
+              ...conv,
+              messages: [...messagesWithoutTemp, errorMessage],
+            };
+          }
+          return conv;
+        });
+        
+        setConversations(errorConversations);
+        saveConversations(errorConversations);
       }
       
     } catch (error) {
-      console.error("Error calling n8n:", error);
+      console.error("Error in main try/catch block:", error);
       const errorMessage: Message = {
         id: crypto.randomUUID(),
         content: "Có lỗi xảy ra khi gọi API. Vui lòng thử lại.",
@@ -157,7 +197,7 @@ const Index = () => {
         if (conv.id === currentConversationId) {
           return {
             ...conv,
-            messages: [...conv.messages, newMessage, errorMessage],
+            messages: [...conv.messages, errorMessage],
           };
         }
         return conv;
@@ -166,6 +206,7 @@ const Index = () => {
       setConversations(errorConversations);
       saveConversations(errorConversations);
     } finally {
+      console.log("Request process completed, setting isLoading to false");
       setIsLoading(false);
     }
   };

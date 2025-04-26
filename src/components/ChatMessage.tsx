@@ -3,6 +3,8 @@ import { Message } from "@/types/chat";
 import { cn } from "@/lib/utils";
 
 export const ChatMessage = ({ message }: { message: Message }) => {
+  console.log("Rendering message:", message);
+  
   return (
     <div
       className={cn(
@@ -18,6 +20,9 @@ export const ChatMessage = ({ message }: { message: Message }) => {
       <div className="text-zinc-200">{message.content}</div>
       <div className="text-xs text-zinc-500 mt-2">
         {new Date(message.timestamp).toLocaleTimeString("vi-VN")}
+        {message.attachment && (
+          <span className="ml-2">[File: {message.attachment.name}]</span>
+        )}
       </div>
     </div>
   );
