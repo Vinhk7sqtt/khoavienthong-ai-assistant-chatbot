@@ -76,7 +76,7 @@ const Index = () => {
         formData.append('file', file);
       }
 
-      const response = await fetch("YOUR_N8N_ENDPOINT", {
+      const response = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
         method: "POST",
         body: formData,
       });
@@ -104,6 +104,25 @@ const Index = () => {
       saveConversations(finalConversations);
     } catch (error) {
       console.error("Error calling n8n:", error);
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        content: "Có lỗi xảy ra khi gọi API. Vui lòng thử lại.",
+        role: "assistant",
+        timestamp: Date.now(),
+      };
+
+      const errorConversations = conversations.map((conv) => {
+        if (conv.id === currentConversationId) {
+          return {
+            ...conv,
+            messages: [...conv.messages, newMessage, errorMessage],
+          };
+        }
+        return conv;
+      });
+
+      setConversations(errorConversations);
+      saveConversations(errorConversations);
     } finally {
       setIsLoading(false);
     }
