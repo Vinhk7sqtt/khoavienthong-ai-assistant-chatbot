@@ -85,7 +85,7 @@ const Index = () => {
       
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
-        content: data.response || "Xin lỗi, tôi không thể xử lý yêu cầu này.",
+        content: data[0]?.output || "Xin lỗi, tôi không thể xử lý yêu cầu này.",
         role: "assistant",
         timestamp: Date.now(),
       };
