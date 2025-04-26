@@ -103,23 +103,23 @@ const Index = () => {
 
       const response = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
         method: "POST",
-        // mode: "no-cors", // Remove if CORS is handled correctly by the server
+       // mode: "no-cors", // Remove if CORS is handled correctly by the server
         body: formData,
       });
 
-      if (!response.ok) {
-        // Handle non-2xx responses
-        console.error("API request failed:", response.status, response.statusText);
-        const errorText = await response.text(); // Try to get error details
-        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
-      }
+
 
       // Assuming the API returns JSON with the assistant's message
       // Adjust '.output' based on the actual structure of your API response
       const data = await response.json();
 
       console.log("POST response data:", data);
-
+      if (!data) {
+        // Handle non-2xx responses
+        console.error("API request failed:", response.status, response.statusText);
+        const errorText = await response.text(); // Try to get error details
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         // Access the output property from the first element of the array
