@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -6,6 +5,7 @@ import { ChatInput } from "@/components/ChatInput";
 import { Conversation, Message } from "@/types/chat";
 import { loadConversations, saveConversations } from "@/lib/storage";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 const Index = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -78,30 +78,72 @@ const Index = () => {
 
       const response = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
         method: "POST",
+        mode: "no-cors",
         body: formData,
       });
-
-      const data = await response.json();
       
+      toast("Câu hỏi đã được gửi đi", {
+        description: "Vui lòng đợi trong giây lát"
+      });
+
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
-        content: data[0]?.output || "Xin lỗi, tôi không thể xử lý yêu cầu này.",
+        content: "Hệ thống đang xử lý câu hỏi của bạn...",
         role: "assistant",
         timestamp: Date.now(),
       };
 
-      const finalConversations = conversations.map((conv) => {
+      const tempConversations = updatedConversations.map((conv) => {
         if (conv.id === currentConversationId) {
           return {
             ...conv,
-            messages: [...conv.messages, newMessage, assistantMessage],
+            messages: [...conv.messages, assistantMessage],
           };
         }
         return conv;
       });
-
-      setConversations(finalConversations);
-      saveConversations(finalConversations);
+      
+      setConversations(tempConversations);
+      saveConversations(tempConversations);
+      
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      try {
+        const getResponse = await fetch("https://app-02380590.n8nhost.info/webhook/8bf7025a-e9b3-4116-9bbc-7c0401a3b78b", {
+          method: "GET",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (getResponse.ok) {
+          const data = await getResponse.json();
+          
+          const finalMessage: Message = {
+            id: crypto.randomUUID(),
+            content: data[0]?.output || "Xin lỗi, tôi không thể xử lý yêu cầu này.",
+            role: "assistant",
+            timestamp: Date.now(),
+          };
+          
+          const finalConversations = tempConversations.map((conv) => {
+            if (conv.id === currentConversationId) {
+              const messagesWithoutTemp = conv.messages.filter(m => m.id !== assistantMessage.id);
+              return {
+                ...conv,
+                messages: [...messagesWithoutTemp, finalMessage],
+              };
+            }
+            return conv;
+          });
+          
+          setConversations(finalConversations);
+          saveConversations(finalConversations);
+        }
+      } catch (error) {
+        console.error("Error getting response:", error);
+      }
+      
     } catch (error) {
       console.error("Error calling n8n:", error);
       const errorMessage: Message = {
@@ -111,7 +153,7 @@ const Index = () => {
         timestamp: Date.now(),
       };
 
-      const errorConversations = conversations.map((conv) => {
+      const errorConversations = updatedConversations.map((conv) => {
         if (conv.id === currentConversationId) {
           return {
             ...conv,
