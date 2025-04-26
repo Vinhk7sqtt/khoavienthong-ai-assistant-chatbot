@@ -40,6 +40,8 @@ const Index = () => {
   const sendMessage = async (content: string, file?: File) => {
     let activeConversationId = currentConversationId;
 
+    let currentConversations = conversations;
+
     if (!activeConversationId) {
       // Create new chat and wait for state to update
       const newConversation: Conversation = {
@@ -49,14 +51,13 @@ const Index = () => {
         timestamp: Date.now(),
       };
       
+      currentConversations = [newConversation, ...conversations];
+      
       await new Promise<void>((resolve) => {
-        setConversations((prev) => {
-          const newConversations = [newConversation, ...prev];
-          saveConversations(newConversations);
-          resolve();
-          return newConversations;
-        });
+        setConversations(currentConversations);
         setCurrentConversationId(newConversation.id);
+        saveConversations(currentConversations);
+        resolve();
       });
       
       activeConversationId = newConversation.id;
@@ -76,7 +77,7 @@ const Index = () => {
       } : undefined
     };
 
-    const updatedConversations = conversations.map((conv) => {
+    const updatedConversations = currentConversations.map((conv) => {
       if (conv.id === activeConversationId) {
         return {
           ...conv,
@@ -146,7 +147,7 @@ const Index = () => {
         description: "AI đã trả lời câu hỏi của bạn."
       });
     } catch (error) {
-      console.error("Error in main try/catch block:", error);
+      //console.error("Error in main try/catch block:", error);
       const errorMessage: Message = {
         id: crypto.randomUUID(),
         content: "Có lỗi xảy ra khi gọi API. Vui lòng thử lại.",
