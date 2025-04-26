@@ -111,7 +111,7 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen bg-zinc-900">
-      <div className="w-72 flex-shrink-0">
+      <div className="flex-shrink-0">
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
@@ -119,12 +119,12 @@ const Index = () => {
           onSelectConversation={setCurrentConversationId}
         />
       </div>
-      <div className="flex-1 flex flex-col h-screen">
-        <div className="text-center p-8 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-b border-zinc-800">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
+      <div className="flex-1 flex flex-col h-screen max-w-6xl mx-auto">
+        <div className="text-center p-6 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-b border-zinc-800">
+          <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
             KHOA VIỄN THÔNG
           </h1>
-          <p className="text-zinc-300">Trợ lý AI hỗ trợ học tập</p>
+          <p className="text-zinc-300 text-sm">Trợ lý AI hỗ trợ học tập</p>
         </div>
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-4xl mx-auto">
