@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   content: string;
@@ -15,4 +16,5 @@ export interface Conversation {
   title: string;
   messages: Message[];
   timestamp: number;
+  favorite?: boolean;
 }

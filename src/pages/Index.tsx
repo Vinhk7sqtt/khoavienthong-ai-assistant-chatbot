@@ -181,6 +181,7 @@ const Index = () => {
           currentConversationId={currentConversationId}
           onNewChat={createNewChat}
           onSelectConversation={setCurrentConversationId}
+          setConversations={setConversations}
         />
       </div>
       <div className="flex-1 flex flex-col h-screen max-w-6xl mx-auto">
@@ -192,7 +193,6 @@ const Index = () => {
         </div>
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-4xl mx-auto">
-            {/* Removed console log from here */}
             {currentConversation?.messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
